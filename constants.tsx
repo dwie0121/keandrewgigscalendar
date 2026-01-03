@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -42,9 +41,11 @@ export const DESIGNATIONS = [
   'Second Shooter',
   'Videographer',
   'Lead Videographer',
+  'Editor',
   'Video Editor',
   'Photo Editor',
   'Production Assistant',
   'Makeup Artist',
-  'Stylist'
+  'Stylist',
+  'Creative Lead'
 ];
