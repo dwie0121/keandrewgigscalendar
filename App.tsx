@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Staff, StudioEvent, ViewMode, ActivityLog } from './types';
 import { Icons } from './constants';
@@ -16,54 +15,48 @@ const ADMIN_PASSCODE = 'KEANDREW';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('dashboard');
-  const [events, setEvents] = useState<StudioEvent[]>([]);
-  const [staff, setStaff] = useState<Staff[]>([]);
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [currentUser, setCurrentUser] = useState<Staff | null>(null);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showToast, setShowToast] = useState(false);
+  
+  // Initial state loading from localStorage
+  const [events, setEvents] = useState<StudioEvent[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_EVENTS);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [staff, setStaff] = useState<Staff[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_STAFF);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [logs, setLogs] = useState<ActivityLog[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_LOGS);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [currentUser, setCurrentUser] = useState<Staff | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_USER);
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  // Load data on mount
+  // Persistence Effects
   useEffect(() => {
-    try {
-      const savedEvents = localStorage.getItem(STORAGE_KEY_EVENTS);
-      const savedStaff = localStorage.getItem(STORAGE_KEY_STAFF);
-      const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
-      const savedUser = localStorage.getItem(STORAGE_KEY_USER);
+    localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
+  }, [events]);
 
-      if (savedEvents) setEvents(JSON.parse(savedEvents));
-      if (savedStaff) setStaff(JSON.parse(savedStaff));
-      if (savedLogs) setLogs(JSON.parse(savedLogs));
-      if (savedUser) setCurrentUser(JSON.parse(savedUser));
-      
-      setLastSaved(new Date());
-    } catch (e) {
-      console.error("Failed to load data from local storage", e);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(staff));
+  }, [staff]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+  }, [logs]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem(STORAGE_KEY_USER);
     }
-  }, []);
-
-  // Save data on change
-  useEffect(() => {
-    setIsSaving(true);
-    const timeout = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
-      localStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(staff));
-      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
-      if (currentUser) {
-        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
-      } else {
-        localStorage.removeItem(STORAGE_KEY_USER);
-      }
-      setLastSaved(new Date());
-      setIsSaving(false);
-      
-      setShowToast(true);
-      const toastTimeout = setTimeout(() => setShowToast(false), 3000);
-      return () => clearTimeout(toastTimeout);
-    }, 800);
-    return () => clearTimeout(timeout);
-  }, [events, staff, logs, currentUser]);
+  }, [currentUser]);
 
   const logActivity = (action: string, details: string) => {
     if (!currentUser) return;
@@ -75,53 +68,49 @@ const App: React.FC = () => {
       details,
       timestamp: new Date().toISOString(),
     };
-    setLogs(prev => [newLog, ...prev].slice(0, 500));
+    setLogs(prev => [newLog, ...prev].slice(0, 100));
   };
 
   const addEvent = (event: StudioEvent) => {
     setEvents(prev => [...prev, event]);
-    logActivity('Added Booking', `Created booking: ${event.title}`);
+    logActivity('Added Booking', `Created: ${event.title}`);
   };
 
   const updateEvent = (updated: StudioEvent) => {
     setEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
-    logActivity('Updated Booking', `Modified booking: ${updated.title}`);
+    logActivity('Updated Booking', `Modified: ${updated.title}`);
   };
 
   const deleteEvent = (id: string) => {
-    const event = events.find(e => e.id === id);
-    setEvents(prev => prev.filter(e => e.id !== id));
-    logActivity('Deleted Booking', `Removed booking: ${event?.title || id}`);
+    const e = events.find(ev => ev.id === id);
+    setEvents(prev => prev.filter(ev => ev.id !== id));
+    logActivity('Deleted Booking', `Removed: ${e?.title || id}`);
   };
 
   const addStaff = (s: Staff) => {
     setStaff(prev => [...prev, s]);
-    logActivity('Added Team Member', `Added new staff: ${s.name}`);
+    logActivity('Added Team Member', `Joined: ${s.name}`);
   };
 
   const updateStaff = (updated: Staff) => {
     setStaff(prev => prev.map(s => s.id === updated.id ? updated : s));
-    logActivity('Updated Team Member', `Modified staff details: ${updated.name}`);
+    logActivity('Updated Team Member', `Modified: ${updated.name}`);
   };
 
   const deleteStaff = (id: string) => {
-    if (!window.confirm("Are you sure? This will remove this staff member from all future assignments.")) return;
-    const member = staff.find(s => s.id === id);
-    setStaff(prev => prev.filter(s => s.id !== id));
-    setEvents(prev => prev.map(e => ({
-      ...e,
-      assignments: e.assignments.filter(a => a.staffId !== id)
-    })));
-    logActivity('Deleted Team Member', `Removed staff: ${member?.name || id}`);
+    if (!window.confirm("Are you sure you want to remove this staff member?")) return;
+    const s = staff.find(member => member.id === id);
+    setStaff(prev => prev.filter(member => member.id !== id));
+    logActivity('Deleted Team Member', `Removed: ${s?.name || id}`);
   };
 
   const handleLogin = (name: string, passcode?: string) => {
     const isPasscodeCorrect = passcode === ADMIN_PASSCODE;
 
-    // First user setup
+    // If no staff exists, allow the first person to become an admin with the passcode
     if (staff.length === 0) {
       if (!isPasscodeCorrect) {
-        alert("Enter the valid Admin Passcode (KEANDREW) to setup the studio owner account.");
+        alert("Enter 'KEANDREW' passcode for first-time owner setup.");
         return;
       }
       const firstAdmin: Staff = {
@@ -131,27 +120,23 @@ const App: React.FC = () => {
         baseDesignation: 'Studio Owner',
         isAdmin: true
       };
-      setStaff([firstAdmin]);
+      addStaff(firstAdmin);
       setCurrentUser(firstAdmin);
-      logActivity('Initial Login', 'First user registered as Admin with verified key');
       return;
     }
 
-    // Existing user matching
-    const found = staff.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
-    
+    const found = staff.find(s => s.name.toLowerCase() === name.toLowerCase().trim());
     if (found) {
-      // If they provide the correct passcode, ensure they have admin rights for the session
       const userToLogin = { ...found, isAdmin: found.isAdmin || isPasscodeCorrect };
       setCurrentUser(userToLogin);
-      logActivity('Login', `User ${found.name} signed in ${isPasscodeCorrect ? '(Admin Verified)' : '(Staff)'}`);
+      logActivity('Login', `User ${found.name} signed in ${isPasscodeCorrect ? '(Admin Mode)' : '(Staff Mode)'}`);
     } else {
-      alert("Name not found in Team list. Please ask an Admin to add you.");
+      alert("Name not found in Team list. Please contact an Admin to add your name.");
     }
   };
 
   const handleLogout = () => {
-    logActivity('Logout', `User ${currentUser?.name} signed out`);
+    logActivity('Logout', `${currentUser?.name} signed out`);
     setCurrentUser(null);
     setActiveView('dashboard');
   };
@@ -162,9 +147,7 @@ const App: React.FC = () => {
       <button 
         onClick={() => setActiveView(id)}
         className={`flex flex-col items-center justify-center py-2 px-6 transition-all duration-300 relative group ${
-          activeView === id 
-            ? 'text-indigo-600' 
-            : 'text-slate-400 hover:text-indigo-400'
+          activeView === id ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-400'
         }`}
       >
         <Icon size={20} className={`mb-1 transition-transform duration-300 ${activeView === id ? 'scale-110' : 'group-hover:scale-105'}`} />
@@ -182,30 +165,21 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 selection:bg-indigo-100 selection:text-indigo-700">
-      <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ${showToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-        <div className="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700">
-          <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-            <Icons.Paid size={14} className="text-white" />
-          </div>
-          <span className="text-sm font-bold tracking-tight">System Synchronized</span>
-        </div>
-      </div>
-
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-indigo-200 rotate-3 transition-transform">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-indigo-200 rotate-3">
               K
             </div>
             <div className="hidden sm:block">
               <h1 className="font-black text-xl text-slate-900 tracking-tight leading-none uppercase">Kean Drew</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`text-[10px] font-bold tracking-widest uppercase ${currentUser.isAdmin ? 'text-indigo-600' : 'text-slate-500'}`}>
-                  {currentUser.isAdmin ? 'KEANDREW Verified' : 'Staff Access'}
+                  {currentUser.isAdmin ? 'Owner Verified' : 'Staff Access'}
                 </span>
-                <span className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`} />
-                <span className="text-[10px] text-slate-400 font-medium">
-                  Hi, {currentUser.name}
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-[10px] text-slate-400 font-medium lowercase">
+                  Local Storage Active
                 </span>
               </div>
             </div>
@@ -229,7 +203,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
-        <div className="transition-all duration-500 ease-in-out">
+        <div className="animate-fadeIn">
           {activeView === 'dashboard' && <DashboardView events={events} staff={staff} />}
           {activeView === 'calendar' && (
             <CalendarView 
@@ -259,7 +233,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="max-w-7xl mx-auto w-full px-6 py-8 text-center text-slate-400">
-        <p className="text-xs font-medium tracking-wide">© {new Date().getFullYear()} Kean Drew Studio Management System • Connected as {currentUser.name}</p>
+        <p className="text-xs font-medium tracking-wide">© {new Date().getFullYear()} Kean Drew Studio Manager • All Data Saved Locally</p>
       </footer>
     </div>
   );

@@ -1,18 +1,14 @@
-
 import React, { useMemo } from 'react';
 import { StudioEvent, Staff } from '../types';
 import { Icons } from '../constants';
 import { 
-  BarChart, 
-  Bar, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
   AreaChart, 
-  Area,
-  Cell
+  Area
 } from 'recharts';
 
 interface DashboardProps {
@@ -49,11 +45,10 @@ const DashboardView: React.FC<DashboardProps> = ({ events, staff }) => {
     };
   }, [events, staff]);
 
-  // Chart Data: Group Revenue by Month
   const chartData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
-    const data = months.map((month, idx) => {
+    return months.map((month, idx) => {
       const filtered = events.filter(e => {
         const d = new Date(e.date);
         return d.getMonth() === idx && d.getFullYear() === currentYear;
@@ -68,16 +63,15 @@ const DashboardView: React.FC<DashboardProps> = ({ events, staff }) => {
         Profit: revenue - expense
       };
     });
-    return data;
   }, [events]);
 
   const StatCard = ({ label, value, icon: Icon, colorClass }: any) => (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 transition-transform hover:scale-[1.02] cursor-default">
       <div className={`p-3 rounded-xl ${colorClass}`}>
         <Icon size={24} />
       </div>
       <div>
-        <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{label}</p>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-1">{label}</p>
         <p className="text-2xl font-bold text-slate-800">₱{value.toLocaleString()}</p>
       </div>
     </div>
@@ -85,9 +79,14 @@ const DashboardView: React.FC<DashboardProps> = ({ events, staff }) => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-800">Business Overview (Philippines)</h2>
-        <p className="text-sm text-slate-500">{new Date().getFullYear()} Summary (PHP)</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Studio Pulse</h2>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Real-time Performance Metrics</p>
+        </div>
+        <div className="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">{new Date().getFullYear()} Annual Summary</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -95,16 +94,16 @@ const DashboardView: React.FC<DashboardProps> = ({ events, staff }) => {
           label="Total Revenue" 
           value={stats.totalRevenue} 
           icon={Icons.Money} 
-          colorClass="bg-green-50 text-green-600" 
+          colorClass="bg-emerald-50 text-emerald-600" 
         />
         <StatCard 
           label="Staff Expenses" 
           value={stats.totalExpenses} 
           icon={Icons.Staff} 
-          colorClass="bg-orange-50 text-orange-600" 
+          colorClass="bg-rose-50 text-rose-600" 
         />
         <StatCard 
-          label="Net Profit" 
+          label="Net Earnings" 
           value={stats.netProfit} 
           icon={Icons.Growth} 
           colorClass="bg-indigo-50 text-indigo-600" 
@@ -112,62 +111,64 @@ const DashboardView: React.FC<DashboardProps> = ({ events, staff }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Performance Chart */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-800 mb-6">Revenue vs Profit Trend (₱)</h3>
-          <div className="h-[300px] w-full">
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Monthly Growth Trends</h3>
+          <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15}/>
                     <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorProf" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} dy={15} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} tickFormatter={(v) => `₱${v >= 1000 ? (v/1000).toFixed(0) + 'k' : v}`} />
                 <Tooltip 
                   formatter={(value: number) => [`₱${value.toLocaleString()}`, '']}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ stroke: '#e2e8f0' }}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                  labelStyle={{ fontWeight: 900, marginBottom: '8px', color: '#1e293b', textTransform: 'uppercase', fontSize: '10px' }}
+                  cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
                 />
-                <Area type="monotone" dataKey="Revenue" stroke="#4f46e5" fillOpacity={1} fill="url(#colorRev)" strokeWidth={3} />
-                <Area type="monotone" dataKey="Profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProf)" strokeWidth={3} />
+                <Area type="monotone" dataKey="Revenue" stroke="#4f46e5" fillOpacity={1} fill="url(#colorRev)" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="Profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProf)" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Staff Payout Status */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-800 mb-6">Staff Fee Summary</h3>
-          <div className="overflow-y-auto max-h-[300px] pr-2 space-y-4">
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Team Compensation Ledger</h3>
+          <div className="overflow-y-auto max-h-[320px] pr-2 space-y-4 hide-scrollbar">
             {staff.length === 0 ? (
-              <p className="text-slate-400 text-center py-10">No staff records yet.</p>
+              <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+                <Icons.Staff size={48} strokeWidth={1} />
+                <p className="text-[10px] font-black uppercase tracking-widest mt-4">No staff records initialized</p>
+              </div>
             ) : (
               staff.map(member => {
                 const s = stats.staffFees[member.id] || { earned: 0, paid: 0 };
                 const unpaid = s.earned - s.paid;
                 return (
-                  <div key={member.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold uppercase">
+                  <div key={member.id} className="flex items-center justify-between p-5 bg-slate-50/50 rounded-2xl border border-slate-100 transition-colors hover:bg-slate-50">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white shadow-sm border border-slate-100 rounded-xl flex items-center justify-center text-indigo-600 font-black text-lg">
                         {member.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800">{member.name}</p>
-                        <p className="text-xs text-slate-500">{member.baseDesignation}</p>
+                        <p className="font-black text-slate-800 text-sm uppercase tracking-tight">{member.name}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{member.baseDesignation}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-slate-800">₱{s.earned.toLocaleString()}</p>
-                      <p className={`text-xs font-medium ${unpaid > 0 ? 'text-red-500' : 'text-green-600'}`}>
-                        {unpaid > 0 ? `Unpaid: ₱${unpaid.toLocaleString()}` : 'Fully Paid'}
+                      <p className="font-black text-slate-900 text-sm">₱{s.earned.toLocaleString()}</p>
+                      <p className={`text-[9px] font-black uppercase tracking-widest mt-1 ${unpaid > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                        {unpaid > 0 ? `Balance: ₱${unpaid.toLocaleString()}` : 'Settled'}
                       </p>
                     </div>
                   </div>
