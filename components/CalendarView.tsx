@@ -6,12 +6,10 @@ import EventModal from './EventModal';
 import { 
   format, 
   addMonths, 
-  subMonths, 
-  startOfMonth, 
+  // Fix: subMonths, startOfMonth, and startOfWeek are missing in this environment's date-fns
   endOfMonth, 
   eachDayOfInterval, 
   isSameDay, 
-  startOfWeek, 
   endOfWeek,
   addYears,
   subYears,
@@ -39,9 +37,19 @@ const CalendarView: React.FC<CalendarProps> = ({ events, staff, isAdmin, onAddEv
   const [hoveredDay, setHoveredDay] = useState<Date | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  const monthStart = startOfMonth(currentDate);
+  // Fix: Manual calculation for startOfMonth since it is missing from date-fns
+  const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const monthEnd = endOfMonth(monthStart);
-  const calendarStart = startOfWeek(monthStart);
+  
+  // Fix: Manual calculation for startOfWeek since it is missing from date-fns
+  const getStartOfWeek = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    return new Date(d.setDate(diff));
+  };
+
+  const calendarStart = getStartOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
   
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
@@ -77,7 +85,8 @@ const CalendarView: React.FC<CalendarProps> = ({ events, staff, isAdmin, onAddEv
 
   const prev = () => {
     if (viewType === 'year') setCurrentDate(subYears(currentDate, 1));
-    else setCurrentDate(subMonths(currentDate, 1));
+    // Fix: Use addMonths with negative value instead of missing subMonths
+    else setCurrentDate(addMonths(currentDate, -1));
   };
 
   const getDayEvents = (day: Date) => events.filter(e => isSameDay(new Date(e.date), day));
@@ -217,7 +226,7 @@ const CalendarView: React.FC<CalendarProps> = ({ events, staff, isAdmin, onAddEv
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
                   <div key={d} className="text-[9px] text-center font-black text-slate-300 uppercase py-2">{d}</div>
                 ))}
-                {eachDayOfInterval({ start: startOfWeek(m), end: endOfWeek(endOfMonth(m)) }).map(d => {
+                {eachDayOfInterval({ start: getStartOfWeek(m), end: endOfWeek(endOfMonth(m)) }).map(d => {
                   const dayEvents = getDayEvents(d);
                   const isCurMonth = isSameMonth(d, m);
                   const isDayToday = isToday(d);
