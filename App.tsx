@@ -5,22 +5,28 @@ import DashboardView from './components/DashboardView';
 import CalendarView from './components/CalendarView';
 import StaffView from './components/StaffView';
 import ActivityLogsView from './components/ActivityLogsView';
-import LoginView from './components/LoginView';
 
 const STORAGE_KEY_EVENTS = 'kean_drew_events_v1';
 const STORAGE_KEY_STAFF = 'kean_drew_staff_v1';
 const STORAGE_KEY_LOGS = 'kean_drew_logs_v1';
-const STORAGE_KEY_USER = 'kean_drew_current_user_v1';
-const ADMIN_PASSCODE = 'KEANDREW';
 
 const DEFAULT_STAFF: Staff[] = [
   { id: 'st-1', name: 'NERICA', contact: 'Verified Staff', baseDesignation: 'Production Assistant', isAdmin: false },
   { id: 'st-2', name: 'JEFF', contact: 'Verified Staff', baseDesignation: 'Photographer', isAdmin: false },
   { id: 'st-3', name: 'CERCAN', contact: 'Verified Staff', baseDesignation: 'Videographer', isAdmin: false },
   { id: 'st-4', name: 'JEV', contact: 'Verified Staff', baseDesignation: 'Editor', isAdmin: false },
-  { id: 'st-5', name: 'KEAN', contact: 'Verified Staff', baseDesignation: 'Creative Lead', isAdmin: false },
+  { id: 'st-5', name: 'KEAN', contact: 'Verified Staff', baseDesignation: 'Creative Lead', isAdmin: true },
   { id: 'st-6', name: 'KC', contact: 'Verified Staff', baseDesignation: 'Production Assistant', isAdmin: false },
 ];
+
+// Default user profile (Admin)
+const ADMIN_USER: Staff = { 
+  id: 'st-5', 
+  name: 'KEAN', 
+  contact: 'Verified Owner', 
+  baseDesignation: 'Creative Lead', 
+  isAdmin: true 
+};
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('dashboard');
@@ -40,10 +46,7 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
-  const [currentUser, setCurrentUser] = useState<Staff | null>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_USER);
-    return saved ? JSON.parse(saved) : null;
-  });
+  const currentUser = ADMIN_USER; // Always Admin
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
@@ -57,16 +60,7 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
   }, [logs]);
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(STORAGE_KEY_USER);
-    }
-  }, [currentUser]);
-
   const logActivity = (action: string, details: string) => {
-    if (!currentUser) return;
     const newLog: ActivityLog = {
       id: Date.now().toString(),
       userId: currentUser.id,
@@ -111,35 +105,6 @@ const App: React.FC = () => {
     logActivity('Deleted Team Member', `Removed: ${s?.name || id}`);
   };
 
-  const handleLogin = (name: string, passcode?: string) => {
-    const isPasscodeCorrect = passcode?.toUpperCase() === ADMIN_PASSCODE;
-    const found = staff.find(s => s.name.toLowerCase().trim() === name.toLowerCase().trim());
-    
-    if (found) {
-      const userToLogin = { ...found, isAdmin: found.isAdmin || isPasscodeCorrect };
-      setCurrentUser(userToLogin);
-      logActivity('Login', `User ${found.name} signed in ${isPasscodeCorrect ? '(Admin Mode)' : '(Staff Mode)'}`);
-    } else if (staff.length === 0 || isPasscodeCorrect) {
-      const newStaff: Staff = {
-        id: 'user-' + Date.now(),
-        name,
-        contact: 'Manual Entry',
-        baseDesignation: isPasscodeCorrect ? 'Studio Owner' : 'Team Staff',
-        isAdmin: isPasscodeCorrect
-      };
-      addStaff(newStaff);
-      setCurrentUser(newStaff);
-    } else {
-      alert("Name not recognized. Please check with the Studio Owner.");
-    }
-  };
-
-  const handleLogout = () => {
-    logActivity('Logout', `${currentUser?.name} signed out`);
-    setCurrentUser(null);
-    setActiveView('dashboard');
-  };
-
   const NavItem = ({ icon: Icon, label, id, adminOnly }: { icon: any, label: string, id: ViewMode, adminOnly?: boolean }) => {
     if (adminOnly && !currentUser?.isAdmin) return null;
     return (
@@ -158,10 +123,6 @@ const App: React.FC = () => {
     );
   };
 
-  if (!currentUser) {
-    return <LoginView onLogin={handleLogin} />;
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 selection:bg-indigo-100 selection:text-indigo-700">
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
@@ -173,13 +134,10 @@ const App: React.FC = () => {
             <div className="hidden sm:block">
               <h1 className="font-black text-xl text-slate-900 tracking-tight leading-none uppercase">Kean Drew</h1>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-[10px] font-bold tracking-widest uppercase ${currentUser.isAdmin ? 'text-indigo-600' : 'text-slate-500'}`}>
-                  {currentUser.isAdmin ? 'Owner Verified' : 'Staff Access'}
+                <span className="text-[10px] font-bold tracking-widest uppercase text-indigo-600">
+                  Studio Manager Active
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span className="text-[10px] text-slate-400 font-medium lowercase">
-                  Active User: {currentUser.name}
-                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               </div>
             </div>
           </div>
@@ -189,14 +147,6 @@ const App: React.FC = () => {
             <NavItem id="calendar" icon={Icons.Calendar} label="Book" />
             <NavItem id="staff" icon={Icons.Staff} label="Team" />
             <NavItem id="logs" icon={Icons.Work} label="Logs" adminOnly />
-            
-            <button 
-              onClick={handleLogout}
-              className="flex flex-col items-center justify-center py-2 px-6 text-slate-400 hover:text-red-500 transition-colors"
-            >
-              <Icons.Prev size={20} className="mb-1" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Exit</span>
-            </button>
           </nav>
         </div>
       </header>
@@ -232,7 +182,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="max-w-7xl mx-auto w-full px-6 py-8 text-center text-slate-400">
-        <p className="text-xs font-medium tracking-wide">© {new Date().getFullYear()} Kean Drew Studio Manager • All Data Saved Locally</p>
+        <p className="text-xs font-medium tracking-wide">© {new Date().getFullYear()} Kean Drew Studio Manager • Secured Local Session</p>
       </footer>
     </div>
   );
