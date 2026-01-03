@@ -1,32 +1,35 @@
 # Kean Drew Studio Manager
 
-A high-performance, aesthetically pleasing studio management application designed for Kean Drew Studio. Features robust calendar booking, financial pulse tracking, and team management.
-
-## 🚀 Features
-
-- **Dynamic Calendar**: View bookings in Month, Year, and List formats. Click-to-add functionality for rapid scheduling.
-- **Financial Pulse**: Real-time revenue, expense, and profit charts using Recharts.
-- **Team Management**: Tracking compensation, designations, and payment statuses for studio crew.
-- **Security**: Local-first data persistence with Administrative passcode protection (`KEANDREW`).
-- **Activity Logs**: Full audit trail of all changes made within the system (Admin only).
+A high-performance, aesthetically pleasing studio management application.
 
 ## 🛠 Tech Stack
-
-- **Framework**: React 19
+- **Framework**: React 19 (ESM Native)
 - **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Data Visualization**: Recharts
-- **Date Utilities**: date-fns
+- **Data**: LocalStorage Persistence
 
 ## 📦 Getting Started
 
-1. Clone the repository.
-2. Since this app uses modern ESM `importmap`, you can run it directly using any static web server (e.g., Live Server in VS Code).
-3. No build step required for local development.
+### Option 1: Zero-Install (Recommended)
+This app uses modern Browser ESM. You do not need to install anything. Just open `index.html` using a static server:
+- If using VS Code, right-click `index.html` and select **"Open with Live Server"**.
+- Or run `npx serve .` in your terminal.
 
-## 💾 Data Persistence
+### Option 2: Standard NPM Workflow
+If you prefer using npm for local development:
+1. Run `npm install` (this will install dependencies for IDE intellisense).
+2. Run `npm run dev` to start a local preview server.
 
-This app utilizes the browser's `localStorage` to save all studio data. No backend is required, making it highly portable and private. Ensure you export or backup your browser data regularly.
+## ⚠️ Troubleshooting "npm install" & Runtime Errors
+
+### "Invalid Hook Call" or "Multiple React Instances"
+This usually happens if the `importmap` in `index.html` has mismatched versions. 
+- **Fix**: Ensure `react` and `react-dom` in the `<script type="importmap">` are pinned to the exact same version (e.g., `19.0.0`). We have pre-configured this for you.
+
+### "No package.json found"
+- **Fix**: We have added a `package.json` to the root directory. You can now run `npm install` without errors.
+
+### Local Development Performance
+Because this app loads modules directly from `esm.sh`, ensure you have an active internet connection for the first load. After that, your browser will cache the dependencies.
 
 ---
-© 2025 Kean Drew Studio. All rights reserved.
+© 2025 Kean Drew Studio.
