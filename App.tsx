@@ -14,18 +14,17 @@ const STORAGE_KEY_USER = 'kean_drew_current_user_v1';
 const ADMIN_PASSCODE = 'KEANDREW';
 
 const DEFAULT_STAFF: Staff[] = [
-  { id: 'st-1', name: 'NERICA', contact: 'Team Member', baseDesignation: 'Production Assistant', isAdmin: false },
-  { id: 'st-2', name: 'JEFF', contact: 'Team Member', baseDesignation: 'Photographer', isAdmin: false },
-  { id: 'st-3', name: 'CERCAN', contact: 'Team Member', baseDesignation: 'Videographer', isAdmin: false },
-  { id: 'st-4', name: 'JEV', contact: 'Team Member', baseDesignation: 'Editor', isAdmin: false },
-  { id: 'st-5', name: 'KEAN', contact: 'Team Member', baseDesignation: 'Creative Lead', isAdmin: false },
-  { id: 'st-6', name: 'KC', contact: 'Team Member', baseDesignation: 'Production Assistant', isAdmin: false },
+  { id: 'st-1', name: 'NERICA', contact: 'Verified Staff', baseDesignation: 'Production Assistant', isAdmin: false },
+  { id: 'st-2', name: 'JEFF', contact: 'Verified Staff', baseDesignation: 'Photographer', isAdmin: false },
+  { id: 'st-3', name: 'CERCAN', contact: 'Verified Staff', baseDesignation: 'Videographer', isAdmin: false },
+  { id: 'st-4', name: 'JEV', contact: 'Verified Staff', baseDesignation: 'Editor', isAdmin: false },
+  { id: 'st-5', name: 'KEAN', contact: 'Verified Staff', baseDesignation: 'Creative Lead', isAdmin: false },
+  { id: 'st-6', name: 'KC', contact: 'Verified Staff', baseDesignation: 'Production Assistant', isAdmin: false },
 ];
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('dashboard');
   
-  // Initial state loading from localStorage
   const [events, setEvents] = useState<StudioEvent[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_EVENTS);
     return saved ? JSON.parse(saved) : [];
@@ -33,7 +32,6 @@ const App: React.FC = () => {
   
   const [staff, setStaff] = useState<Staff[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_STAFF);
-    // If no staff exists, populate with default members requested by user
     return saved ? JSON.parse(saved) : DEFAULT_STAFF;
   });
   
@@ -47,7 +45,6 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Persistence Effects
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
   }, [events]);
@@ -115,23 +112,19 @@ const App: React.FC = () => {
   };
 
   const handleLogin = (name: string, passcode?: string) => {
-    const isPasscodeCorrect = passcode === ADMIN_PASSCODE;
-
-    // Check if user exists in the staff list
+    const isPasscodeCorrect = passcode?.toUpperCase() === ADMIN_PASSCODE;
     const found = staff.find(s => s.name.toLowerCase().trim() === name.toLowerCase().trim());
     
     if (found) {
-      // Create user session, elevate to Admin if passcode is correct
       const userToLogin = { ...found, isAdmin: found.isAdmin || isPasscodeCorrect };
       setCurrentUser(userToLogin);
       logActivity('Login', `User ${found.name} signed in ${isPasscodeCorrect ? '(Admin Mode)' : '(Staff Mode)'}`);
     } else if (staff.length === 0 || isPasscodeCorrect) {
-      // Allow first admin setup or on-the-fly admin creation if passcode is correct
       const newStaff: Staff = {
         id: 'user-' + Date.now(),
         name,
         contact: 'Manual Entry',
-        baseDesignation: isPasscodeCorrect ? 'Studio Owner' : 'Team Member',
+        baseDesignation: isPasscodeCorrect ? 'Studio Owner' : 'Team Staff',
         isAdmin: isPasscodeCorrect
       };
       addStaff(newStaff);

@@ -1,20 +1,32 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Kean Drew Studio Manager
 
-# Run and deploy your AI Studio app
+A high-performance, aesthetically pleasing studio management application designed for Kean Drew Studio. Features robust calendar booking, financial pulse tracking, and team management.
 
-This contains everything you need to run your app locally.
+## 🚀 Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1hCQAOWhN1Y724V3PbkEi-t3Wixfo_Tu2
+- **Dynamic Calendar**: View bookings in Month, Year, and List formats. Click-to-add functionality for rapid scheduling.
+- **Financial Pulse**: Real-time revenue, expense, and profit charts using Recharts.
+- **Team Management**: Tracking compensation, designations, and payment statuses for studio crew.
+- **Security**: Local-first data persistence with Administrative passcode protection (`KEANDREW`).
+- **Activity Logs**: Full audit trail of all changes made within the system (Admin only).
 
-## Run Locally
+## 🛠 Tech Stack
 
-**Prerequisites:**  Node.js
+- **Framework**: React 19
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Data Visualization**: Recharts
+- **Date Utilities**: date-fns
 
+## 📦 Getting Started
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Clone the repository.
+2. Since this app uses modern ESM `importmap`, you can run it directly using any static web server (e.g., Live Server in VS Code).
+3. No build step required for local development.
+
+## 💾 Data Persistence
+
+This app utilizes the browser's `localStorage` to save all studio data. No backend is required, making it highly portable and private. Ensure you export or backup your browser data regularly.
+
+---
+© 2025 Kean Drew Studio. All rights reserved.
